@@ -6,6 +6,8 @@ import * as vscode from 'vscode';
 import * as fs from 'fs';
 const pascalCase = require('pascal-case');
 const noCase = require('no-case');
+const urlify = require('urlify').create({addEToUmlauts: true});
+
 
 // this method is called when your extension is activated
 // your extension is activated the very first time the command is executed
@@ -16,7 +18,16 @@ export function activate(context: vscode.ExtensionContext) {
     console.log('Congratulations, your extension "templatemommy" is now active!');
 
     const inputOptions: vscode.InputBoxOptions = {
-        placeHolder: `enter Module Name please`
+      placeHolder: `enter Module Name please`,
+      validateInput: (value) => {
+        const start = value[0].match(/[0-9]+/g);
+        if (start && start.length) {
+          if (start.length) {
+            return `A file must Start with a Letter. ${value[0]}`
+          }
+        }
+        return '';
+      }
     }
     const root = `${vscode.workspace.rootPath}/src`;
     // The command has been defined in the package.json file
@@ -35,7 +46,8 @@ export function activate(context: vscode.ExtensionContext) {
             const e = res;
             return vscode.window.showInputBox(inputOptions);
         })
-        .then((value) => {
+          .then((value) => {
+            value = urlify(value);
             folder = noCase(value, null, '-');
             file = pascalCase(value);
             if (value) {
